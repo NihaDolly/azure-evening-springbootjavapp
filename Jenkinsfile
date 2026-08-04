@@ -2,7 +2,7 @@ pipeline {
 
     agent any
 
-    tool {
+    tools {
 
         maven 'maven'
 
