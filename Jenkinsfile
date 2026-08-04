@@ -45,5 +45,12 @@ pipeline {
                 sh 'mvn install'
             }
         }
+        stage(' Trivy Scan')
+        {
+            steps {
+                echo "Trivy Scan Started"
+                sh 'trivy fs --format table --output trivy-report.txt --severity HIGH,CRITICAL .'
+            }
+        }
     }
 }
