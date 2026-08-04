@@ -19,5 +19,12 @@ pipeline {
                 git branch: 'prod' , url: 'https://github.com/bkrrajmali/azure-evening-springbootjavapp.git'
             }
         }
+
+        stage('Maven Validate') 
+        {
+            steps {
+                sh 'mvn validate'
+            }
+        }
     }
 }

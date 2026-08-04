@@ -88,7 +88,7 @@
         <docker.jib-maven-plugin.version>3.4.5</docker.jib-maven-plugin.version>
         <docker.image.prefix>springcommunity</docker.image.prefix>
 
-    </properties>
+    </properties
 
     <dependencyManagement>
         <dependencies>
