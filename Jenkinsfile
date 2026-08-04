@@ -33,10 +33,16 @@ pipeline {
                 sh 'mvn compile'
             }
         }
-          stage('Maven Test') 
+        stage('Maven Test') 
         {
             steps {
                 sh 'mvn test'
+            }
+        }
+        stage('Maven Install') 
+        {
+            steps {
+                sh 'mvn install'
             }
         }
     }
