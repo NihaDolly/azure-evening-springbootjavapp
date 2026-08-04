@@ -26,5 +26,12 @@ pipeline {
                 sh 'mvn validate'
             }
         }
+
+        stage('Maven Compile') 
+        {
+            steps {
+                sh 'mvn compile'
+            }
+        }
     }
 }
