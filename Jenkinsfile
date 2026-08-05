@@ -11,7 +11,7 @@ pipeline {
     environment {
         TENANT_ID="ec78375d-0db0-42cf-82a6-2e6403e95936"
         IMAGE_NAME = "sprinbootapp"
-        IMAGE_TAGE = "latest"
+        IMAGE_TAG = "latest"
         
     }
 
@@ -91,8 +91,10 @@ pipeline {
       stage ('Docker Build')
       {
         steps {
+            scripts {
             echo "Build Docker Image"
             docker.build ("${IMAGE_NAME}:${IMAGE_TAG}")
+            }
         }
       }
    }
