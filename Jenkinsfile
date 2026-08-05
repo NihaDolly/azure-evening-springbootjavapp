@@ -9,7 +9,7 @@ pipeline {
     }
 
     environment {
-        TENANT_ID="ec78375d-0db0-42cf-82a6-2e6403e95936"
+        TENANT_ID="be79d372-8667-48c7-9322-f8f44daef65e"
     }
 
     stages {
