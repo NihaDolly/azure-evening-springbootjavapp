@@ -82,6 +82,7 @@ pipeline {
             steps {
                 timeout(time: 1, unit: 'MINUTES') {
                     waitForQuality abortPipeline: true, credentialsId: 'sonar'
+                    echo "Sonar Quality Gate Finished"
             }
         }
     }
