@@ -61,8 +61,8 @@ pipeline {
                 SCANNER_HOME = tool 'Sonar-scanner'
             }
           steps {
-              withSonarQubeEnv('sonar-server') {
-                sh ''' $(SCANNER_HOME)/bin/sonar-scanner \
+              withSonarQubeEnv('sonarserver') {
+                sh '''$(SCANNER_HOME)/bin/sonar-scanner \
                 -Dsonar.organization=bkrrajmali \
                 -Dsonar.projectName=springbootapp \
                 -Dsonar.projectKey=springbootapp \
