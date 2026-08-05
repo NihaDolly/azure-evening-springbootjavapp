@@ -69,6 +69,7 @@ pipeline {
                 -Dsonar.java.binaries=.
                 '''
               }
+            }
         }
     }
 }
