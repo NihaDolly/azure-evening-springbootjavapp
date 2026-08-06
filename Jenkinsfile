@@ -141,7 +141,7 @@ pipeline {
             sh '''
             az account set --subscription "202d4be6-e0dd-4b9e-84b7-e235d53271a8"
             az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID 
-            az aks get credential --resource-group $RG --name $NAME --overwrite-existing
+            az aks get-credential --resource-group $RG --name $NAME --overwrite-existing
             kubectl apply -f k8s/sprinboot-deployment.yaml
             '''
         }
