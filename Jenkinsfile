@@ -13,6 +13,8 @@ pipeline {
         IMAGE_NAME = "sprinbootapp"
         IMAGE_TAG = "latest"
         ACR_NAME= 'springbootdockerreg'
+        ACR_LOGIN_SERVER ='springbootdockerreg.azurecr.io'
+        FULL_IMAGE_NAME = "${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
     }
 
     stages {
@@ -114,5 +116,19 @@ pipeline {
       }
     }
    }
+   stage {'Docker Push'}
+   {
+    steps 
+    {
+        script {
+            echo"Docker Image Push"
+            sh '''
+            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE_NAME}
+            docker push ${FULL_IMAGE_NAME}
+        }
+    }
+   }
   }
 }
+
+
