@@ -101,7 +101,7 @@ pipeline {
    stage('Azure Login and to ACR')
    {
     steps {
-        withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', usernameVariable: 'AZURE_USERNAME', passwordVariable: 'AZURE_PASSWORD)]) 
+        withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', usernameVariable: 'AZURE_USERNAME', passwordVariable: 'AZURE_PASSWORD')]) 
         {
         script {
             echo "Azure Login"
