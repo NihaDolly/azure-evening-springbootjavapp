@@ -93,7 +93,7 @@ pipeline {
         steps {
             
             echo "Build Docker Image"
-            sh  'docker.build  ("${IMAGE_NAME}:${IMAGE_TAG}")
+            docker.build  ("${IMAGE_NAME}:${IMAGE_TAG}")
       
         }
       }
