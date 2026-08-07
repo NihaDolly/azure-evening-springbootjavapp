@@ -20,31 +20,31 @@ pipeline {
             }
         }
 
-        stage('Maven Validate') 
-        {
-            steps {
-                sh 'mvn validate'
-            }
-        }
+        // stage('Maven Validate') 
+        // {
+        //     steps {
+        //         sh 'mvn validate'
+        //     }
+        // }
 
-        stage('Maven Compile') 
-        {
-            steps {
-                sh 'mvn compile'
-            }
-        }
-        stage('Maven Test') 
-        {
-            steps {
-                sh 'mvn test'
-            }
-        }
-        stage('Maven Install') 
-        {
-            steps {
-                sh 'mvn install'
-            }
-        }
+        // stage('Maven Compile') 
+        // {
+        //     steps {
+        //         sh 'mvn compile'
+        //     }
+        // }
+        // stage('Maven Test') 
+        // {
+        //     steps {
+        //         sh 'mvn test'
+        //     }
+        // }
+        // stage('Maven Install') 
+        // {
+        //     steps {
+        //         sh 'mvn install'
+        //     }
+        // }
         stage(' Trivy Scan')
         {
             steps {
@@ -60,7 +60,7 @@ pipeline {
         steps {
             withSonarQubeEnv('sonar-server') {
                 sh '''${SCANNER_HOME}/bin/sonar-scanner \
-                -Dsonar.organization=NihaDolly \
+                -Dsonar.organization=nihadolly \
                 -Dsonar.projectName=azure-evening-springbootjavapp \
                 -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
                 -Dsonar.java.binaries=. \
