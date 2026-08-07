@@ -94,17 +94,19 @@ pipeline {
       }
       stage ('azure login and to acr') {
         steps {
-            withCredentials([usernamePassword(credentialsId: 'azure-credentials', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'AZURE_CLIENT_ID')]) {
-            script {
-                echo "Logging into Azure"
-                sh '''
-                az account set --subscription $SUBSCRIPTION_ID
-                az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $TENANT_ID
-                az acr login --name $ACR_NAME
-                '''
+            withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
+                
+                    script {
+                        echo "Logging into Azure"
+                        sh '''
+                        az account set --subscription $SUBSCRIPTION_ID
+                        az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_PASSWORD --tenant $TENANT_ID
+                        az acr login --name $ACR_NAME
+                        '''
+                    }
+                }
             }
-        }
+            
       }
     }
   }
-}
