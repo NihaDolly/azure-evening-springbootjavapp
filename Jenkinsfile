@@ -100,7 +100,7 @@ pipeline {
                 sh '''
                 az account set --subscription $Subscription_ID
                 az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $TENANT_ID
-                sh az acr login --name $ACR_NAME
+                az acr login --name $ACR_NAME
                 '''
             }
         }
