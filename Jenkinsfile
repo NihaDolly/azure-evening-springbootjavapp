@@ -10,6 +10,8 @@ pipeline {
 
     environment {
         TENANT_ID="be79d372-8667-48c7-9322-f8f44daef65e"
+        IMAGE_NAME="springboot-app"
+        IMAGE_TAG="latest"
     }
 
     stages {
@@ -77,11 +79,16 @@ pipeline {
       stage('Sonar Quality Gate') {
         steps {
             timeout(time: 1, unit: 'MINUTES') {
-                waitForQuality abortPipeline: true, credentialsId: 'sonar'
+                waitForQualityGate abortPipeline: true
                 echo "Sonar Quality Gate Passed"
             }
         }
       }
-      
+    //   stage ('Build Docker Image') {
+    //     steps {
+    //         echo "Building Docker Image"
+    //         sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+    //     }
+    //   }
     }
 }
