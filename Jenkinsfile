@@ -58,7 +58,7 @@ pipeline {
             SCANNER_HOME = tool 'sonar-scanner'
         }
         steps {
-            withSonarQubeEnv('sonarqube') {
+            withSonarQubeEnv('sonar-server') {
                 sh '''${SCANNER_HOME}/bin/sonar-scanner \
                 -Dsonar.organization=NihaDolly \
                 -Dsonar.projectName=azure-evening-springbootjavapp \
@@ -67,7 +67,7 @@ pipeline {
                 '''
             }
         }
+       }
 
-        
     }
 }
