@@ -112,8 +112,8 @@ pipeline {
         stage ('Push Docker Image to ACR') {
             steps {
                 echo "Pushing Docker Image to ACR"
-                sh 'docker tag $IMAGE_NAME:$IMAGE_TAG $ACR_FULL_IMAGE_NAME'
-                sh 'docker push $ACR_FULL_IMAGE_NAME'
+                sh 'docker tag $IMAGE_NAME:$IMAGE_TAG $FULL_IMAGE_NAME'
+                sh 'docker push $FULL_IMAGE_NAME'
             }
     }
   }
