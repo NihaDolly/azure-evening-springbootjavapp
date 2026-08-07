@@ -53,5 +53,21 @@ pipeline {
                 echo "Trivy Scan Finished"
             }
         }
+       stage ('Sonar Analysis') {
+        environment {
+            SCANNER_hOME = tool 'sonar-scanner'
+        }
+        steps {
+            withSonarQubeEnv('sonarqube') {
+                sh '''${SCANNER_HOME}/bin/sonar-scanner \
+                -Dsonar.organization=NihaDolly \
+                -Dsonar.projectName=azure-evening-springbootjavapp \
+                -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
+                -Dsonar.java.binaries=. \
+                '''
+            }
+        }
+
+        
     }
 }
