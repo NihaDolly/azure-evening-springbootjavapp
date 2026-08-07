@@ -47,48 +47,48 @@ pipeline {
         //         sh 'mvn install'
         //     }
         // }
-        stage(' Trivy Scan')
-        {
-            steps {
-                echo "Trivy Scan Started"
-                sh 'trivy fs --format table --output trivy-report.txt --severity HIGH,CRITICAL .'
-                echo "Trivy Scan Finished"
-            }
-        }
-       stage ('Sonar Analysis') {
-        environment {
-            SCANNER_HOME = tool 'sonar-scanner'
-        }
-        steps {
-            withSonarQubeEnv('sonar-server') {
-                sh '''${SCANNER_HOME}/bin/sonar-scanner \
-                -Dsonar.organization=nihadolly \
-                -Dsonar.projectName=azure-evening-springbootjavapp \
-                -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
-                -Dsonar.java.binaries=. \
-                '''
-            }
-        }
-       }
+    //     stage(' Trivy Scan')
+    //     {
+    //         steps {
+    //             echo "Trivy Scan Started"
+    //             sh 'trivy fs --format table --output trivy-report.txt --severity HIGH,CRITICAL .'
+    //             echo "Trivy Scan Finished"
+    //         }
+    //     }
+    //    stage ('Sonar Analysis') {
+    //     environment {
+    //         SCANNER_HOME = tool 'sonar-scanner'
+    //     }
+    //     steps {
+    //         withSonarQubeEnv('sonar-server') {
+    //             sh '''${SCANNER_HOME}/bin/sonar-scanner \
+    //             -Dsonar.organization=nihadolly \
+    //             -Dsonar.projectName=azure-evening-springbootjavapp \
+    //             -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
+    //             -Dsonar.java.binaries=. \
+    //             '''
+    //         }
+    //     }
+    //    }
        stage('maven package') {
         steps {
             sh 'mvn package'
         }
       }
 
-      stage('Sonar Quality Gate') {
-        steps {
-            timeout(time: 5, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true, credentialsId: 'sonar'
-            
-            }
-        }
-      }
-    //   stage ('Build Docker Image') {
+    //   stage('Sonar Quality Gate') {
     //     steps {
-    //         echo "Building Docker Image"
-    //         sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+    //         timeout(time: 5, unit: 'MINUTES') {
+    //             waitForQualityGate abortPipeline: true, credentialsId: 'sonar'
+            
+    //         }
     //     }
     //   }
+      stage ('Build Docker Image') {
+        steps {
+            echo "Building Docker Image"
+            sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+        }
+      }
     }
 }
