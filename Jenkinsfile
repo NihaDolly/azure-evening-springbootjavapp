@@ -128,7 +128,7 @@ pipeline {
                         az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
                         az account set --subscription $SUBSCRIPTION_ID
                         az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME
-                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/springboot-deployment.yaml
                         '''
                     }
                 }
