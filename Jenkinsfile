@@ -16,6 +16,8 @@ pipeline {
         ACR_NAME="springbootcontainerreg"
         ACR_LOGIN_SERVER="springbootcontainerreg.azurecr.io"
         FULL_IMAGE_NAME="$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
+        RG_NAME="jenkins-rg"
+        AKS_CLUSTER_NAME="demo-aks"
     }
 
     stages {
@@ -116,5 +118,22 @@ pipeline {
                 sh 'docker push $FULL_IMAGE_NAME'
             }
     }
+     stage ('Azure login and deploy to AKS ') {
+        steps {
+            withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
+                
+                    script {
+                        echo "Logging into Azure"
+                        sh '''
+                        az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
+                        az account set --subscription $SUBSCRIPTION_ID
+                        az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME
+                        kubectl apply -f k8s/deployment.yaml
+                        '''
+                    }
+                }
+            }
+            
+        }
   }
 }
