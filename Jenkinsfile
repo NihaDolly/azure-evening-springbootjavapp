@@ -128,7 +128,7 @@ pipeline {
                         az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
                         az account set --subscription $SUBSCRIPTION_ID
                         az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME --overwrite-existing
-                        kubectl apply -f k8s/springboot-deployment.yaml
+                        kubectl apply -f k8s/sprinboot-deployment.yaml
                         '''
                     }
                 }
