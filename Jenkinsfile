@@ -61,84 +61,83 @@ pipeline {
         //         echo "Trivy Scan Finished"
         //     }
         // }
-       stage ('Sonar Analysis') {
-        environment {
-            SCANNER_HOME = tool 'sonar-scanner'
-        }
-        steps {
-            withSonarQubeEnv('sonar-server') {
-                sh '''${SCANNER_HOME}/bin/sonar-scanner \
-                -Dsonar.organization=nihadolly \
-                -Dsonar.projectName=azure-evening-springbootjavapp \
-                -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
-                -Dsonar.java.binaries=. \
-                '''
-            }
-        }
-       }
+    //    stage ('Sonar Analysis') {
+    //     environment {
+    //         SCANNER_HOME = tool 'sonar-scanner'
+    //     }
+    //     steps {
+    //         withSonarQubeEnv('sonar-server') {
+    //             sh '''${SCANNER_HOME}/bin/sonar-scanner \
+    //             -Dsonar.organization=nihadolly \
+    //             -Dsonar.projectName=azure-evening-springbootjavapp \
+    //             -Dsonar.projectKey=NihaDolly_azure-evening-springbootjavapp \
+    //             -Dsonar.java.binaries=. \
+    //             '''
+    //         }
+    //     }
+    //    }
        stage('maven package') {
         steps {
             sh 'mvn package'
         }
       }
 
-      stage('Sonar Quality Gate') {
-        steps {
-            timeout(time: 1, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true, credentialsId: 'sonar'
+    //   stage('Sonar Quality Gate') {
+    //     steps {
+    //         timeout(time: 1, unit: 'MINUTES') {
+    //             waitForQualityGate abortPipeline: true, credentialsId: 'sonar'
             
-            }
+    //         }
+    //     }
+    //   }
+    
+      stage ('Build Docker Image') {
+        steps {
+            echo "Building Docker Image"
+            sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
         }
       }
+      stage ('azure login and to acr') {
+        steps {
+            withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
+                
+                    script {
+                        echo "Logging into Azure"
+                        sh '''
+                        az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
+                        az account set --subscription $SUBSCRIPTION_ID
+                        az acr login --name $ACR_NAME
+                        '''
+                    }
+                }
+            } 
+      }
+        stage ('Push Docker Image to ACR') {
+            steps {
+                echo "Pushing Docker Image to ACR"
+                sh 'docker tag $IMAGE_NAME:$IMAGE_TAG $FULL_IMAGE_NAME'
+                sh 'docker push $FULL_IMAGE_NAME'
+            }
     }
-}
-//       stage ('Build Docker Image') {
-//         steps {
-//             echo "Building Docker Image"
-//             sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
-//         }
-//       }
-//       stage ('azure login and to acr') {
-//         steps {
-//             withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
+     stage ('Azure login and deploy to AKS ') {
+        steps {
+            withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
                 
-//                     script {
-//                         echo "Logging into Azure"
-//                         sh '''
-//                         az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
-//                         az account set --subscription $SUBSCRIPTION_ID
-//                         az acr login --name $ACR_NAME
-//                         '''
-//                     }
-//                 }
-//             } 
-//       }
-//         stage ('Push Docker Image to ACR') {
-//             steps {
-//                 echo "Pushing Docker Image to ACR"
-//                 sh 'docker tag $IMAGE_NAME:$IMAGE_TAG $FULL_IMAGE_NAME'
-//                 sh 'docker push $FULL_IMAGE_NAME'
-//             }
-//     }
-//      stage ('Azure login and deploy to AKS ') {
-//         steps {
-//             withCredentials([usernamePassword(credentialsId: 'azure-acr-spn', passwordVariable: 'AZURE_PASSWORD', usernameVariable: 'AZURE_USERNAME')]) {
-                
-//                     script {
-//                         echo "Logging into Azure"
-//                         sh '''
-//                         az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
-//                         az account set --subscription $SUBSCRIPTION_ID
-//                         az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME --overwrite-existing
-//                         echo "===== YAML IMAGE JENKINS IS USING ====="
-//                         grep -n "image:" k8s/sprinboot-deployment.yaml
-//                         echo "===== APPLYING YAML ====="
-//                         kubectl apply -f k8s/sprinboot-deployment.yaml
-//                         '''
-//                     }
-//                 }
-//             }
+                    script {
+                        echo "Logging into Azure"
+                        sh '''
+                        az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
+                        az account set --subscription $SUBSCRIPTION_ID
+                        az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME --overwrite-existing
+                        echo "===== YAML IMAGE JENKINS IS USING ====="
+                        grep -n "image:" k8s/sprinboot-deployment.yaml
+                        echo "===== APPLYING YAML ====="
+                        kubectl apply -f k8s/sprinboot-deployment.yaml
+                        '''
+                    }
+                }
+            }
             
-//         }
-//   }
-// }
+        }
+  }
+}
