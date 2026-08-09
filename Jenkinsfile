@@ -128,6 +128,9 @@ pipeline {
                         az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD --tenant $TENANT_ID
                         az account set --subscription $SUBSCRIPTION_ID
                         az aks get-credentials --resource-group $RG_NAME --name $AKS_CLUSTER_NAME --overwrite-existing
+                        echo "===== YAML IMAGE JENKINS IS USING ====="
+                        grep -n "image:" k8s/sprinboot-deployment.yaml
+                        echo "===== APPLYING YAML ====="
                         kubectl apply -f k8s/sprinboot-deployment.yaml
                         '''
                     }
