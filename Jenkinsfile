@@ -24,7 +24,7 @@ pipeline {
         stage('Check Out from Git') 
         {
             steps {
-                git branch: 'prod' , url: 'https://github.com/bkrrajmali/azure-evening-springbootjavapp.git'
+                git branch: 'prod' , url: 'https://github.com/NihaDolly/azure-evening-springbootjavapp.git'
             }
         }
 
