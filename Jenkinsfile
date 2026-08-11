@@ -18,6 +18,10 @@ pipeline {
         FULL_IMAGE_NAME="$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
         RG_NAME="jenkins-rg"
         AKS_CLUSTER_NAME="demo-aks"
+        DEPLOYMENT_NAME="springboot-app"
+        NAMESPACE="default"
+        EMAIL_FROM="niharika.k1818@gmail.com"
+        EMAIL_RECIPIENTS="niharikabandari1997@gmail.com"
     }
 
     stages {
@@ -139,5 +143,61 @@ pipeline {
             }
             
         }
+        stage('Verify Deployment Rollout')
+        {
+        steps {
+        script {
+            echo "Checking rollout status of deployment ${DEPLOYMENT_NAME} in namespace ${NAMESPACE}"
+            // kubectl rollout status blocks until the rollout completes or the timeout is hit,
+            // and exits non-zero on failure -- that non-zero exit is what fails the stage/pipeline.
+            sh """
+            kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${NAMESPACE} --timeout=60s
+            """
+        }
+    }
+   }
+  
+ 
+  post {
+    success {
+        script {
+            echo "Deployment verified successfully. Sending success email via Brevo API."
+            withCredentials([string(credentialsId: 'brevo-api-key', variable: 'BREVO_API_KEY')]) {
+                sh """
+                curl --fail -s -X POST https://api.brevo.com/v3/smtp/email \\
+                  -H "api-key: \$BREVO_API_KEY" \\
+                  -H "Content-Type: application/json" \\
+                  -d '{
+                    "sender": {"email": "${EMAIL_FROM}"},
+                    "to": [{"email": "${EMAIL_RECIPIENTS}"}],
+                    "subject": "SUCCESS: Jenkins Pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    "textContent": "Good news!\\n\\nThe pipeline ${env.JOB_NAME} build #${env.BUILD_NUMBER} completed successfully, and the deployment ${DEPLOYMENT_NAME} rolled out successfully to AKS.\\n\\nBuild URL: ${env.BUILD_URL}"
+                  }'
+                """
+            }
+        }
+    }
+    failure {
+        script {
+            echo "Pipeline or deployment verification failed. Sending failure email via Brevo API."
+            withCredentials([string(credentialsId: 'brevo-api-key', variable: 'BREVO_API_KEY')]) {
+                sh """
+                curl --fail -s -X POST https://api.brevo.com/v3/smtp/email \\
+                  -H "api-key: \$BREVO_API_KEY" \\
+                  -H "Content-Type: application/json" \\
+                  -d '{
+                    "sender": {"email": "${EMAIL_FROM}"},
+                    "to": [{"email": "${EMAIL_RECIPIENTS}"}],
+                    "subject": "FAILED: Jenkins Pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    "textContent": "The pipeline ${env.JOB_NAME} build #${env.BUILD_NUMBER} FAILED.\\n\\nThis could be due to a build/deploy step failing, or the deployment ${DEPLOYMENT_NAME} failing to roll out successfully in AKS (check the Verify Deployment Rollout stage logs).\\n\\nBuild URL: ${env.BUILD_URL}\\nConsole Log: ${env.BUILD_URL}console"
+                  }'
+                """
+            }
+        }
+    }
+    always {
+        echo "Pipeline finished with status: ${currentBuild.currentResult}"
+    }
   }
+ }
 }
