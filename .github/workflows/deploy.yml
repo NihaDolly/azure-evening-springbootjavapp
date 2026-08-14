@@ -12,8 +12,8 @@ permissions:
 env:
   IMAGE_NAME: sprinbootapp
   IMAGE_TAG: latest
-  ACR_NAME: springbootdockerreg
-  ACR_LOGIN_SERVER: springbootdockerreg.azurecr.io
+  ACR_NAME: demohellowrld
+  ACR_LOGIN_SERVER: demohellowrld.azurecr.io
   RG: kubernetes-mgmt-srv
   AKS_NAME: azure-aks-hpa
   DEPLOYMENT_NAME: springboot-app
