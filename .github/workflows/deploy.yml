@@ -14,8 +14,8 @@ env:
   AKS_NAME: azure-aks-hpa
   DEPLOYMENT_NAME: springboot-app
   NAMESPACE: default
-  EMAIL_RECIPIENTS: bkrraj2021@gmail.com
-  EMAIL_FROM: bkrraj@gmail.com
+  EMAIL_RECIPIENTS: erwwtwqetwq@gmail.com
+  EMAIL_FROM: tewewtewtq@gmail.com
 
 jobs:
   build-and-deploy:
@@ -77,7 +77,7 @@ jobs:
       - name: Send success email
         if: success()
         run: |
-          curl --fail -s -X POST https://api.brevo.com/v3/smtp/email \
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
             -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
@@ -85,12 +85,15 @@ jobs:
               "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
               "subject": "SUCCESS: GitHub Actions ${{ github.workflow }} #${{ github.run_number }}",
               "textContent": "Good news!\n\nThe workflow ${{ github.workflow }} run #${{ github.run_number }} completed successfully, and the deployment '"${DEPLOYMENT_NAME}"' rolled out successfully to AKS.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }'
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
 
       - name: Send failure email
         if: failure()
         run: |
-          curl --fail -s -X POST https://api.brevo.com/v3/smtp/email \
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
             -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
@@ -98,4 +101,7 @@ jobs:
               "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
               "subject": "FAILED: GitHub Actions ${{ github.workflow }} #${{ github.run_number }}",
               "textContent": "The workflow ${{ github.workflow }} run #${{ github.run_number }} FAILED.\n\nThis could be due to a build/deploy step failing, or the deployment '"${DEPLOYMENT_NAME}"' failing to roll out successfully in AKS.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }'
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
