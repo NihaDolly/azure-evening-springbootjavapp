@@ -14,8 +14,8 @@ env:
   AKS_NAME: azure-aks-hpa
   DEPLOYMENT_NAME: springboot-app
   NAMESPACE: default
-  EMAIL_RECIPIENTS: erwwtwqetwq@gmail.com
-  EMAIL_FROM: tewewtewtq@gmail.com
+  EMAIL_RECIPIENTS: bkrraj2021@gmail.com
+  EMAIL_FROM: bkrraj@gmail.com
 
 jobs:
   build-and-deploy:
