@@ -5,6 +5,10 @@ on:
     branches: [ "prod" ]
   workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
 
+permissions:
+  id-token: write   # required for OIDC token exchange with Azure
+  contents: read    # required for actions/checkout
+
 env:
   IMAGE_NAME: sprinbootapp
   IMAGE_TAG: latest
@@ -43,11 +47,13 @@ jobs:
       - name: Build Docker image
         run: docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
 
-      # ---------- Azure login ----------
+      # ---------- Azure login (OIDC, no client secret) ----------
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Login to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
