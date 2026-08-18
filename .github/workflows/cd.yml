@@ -1,0 +1,84 @@
+name: CD - Update Manifest for ArgoCD
+
+on:
+  workflow_run:
+    workflows: ["CI - Build & Push Docker Image to ACR"]
+    types: [completed]
+
+permissions:
+  contents: write   # required to commit the updated manifest back to the repo
+
+env:
+  IMAGE_NAME: sprinbootapp
+  ACR_LOGIN_SERVER: demohellowrld.azurecr.io
+  DEPLOYMENT_NAME: springboot-app
+  MANIFEST_PATH: k8s/sprinboot-deployment.yaml
+  EMAIL_RECIPIENTS: bkrraj2021@gmail.com
+  EMAIL_FROM: bkrraj@gmail.com
+
+jobs:
+  update-manifest:
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out from Git
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+
+    
+      - name: Set image tag from triggering CI run
+        run: echo "IMAGE_TAG=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_ENV"
+
+      - name: Update image tag in manifest
+        run: |
+          sed -i "s|image: .*${IMAGE_NAME}:.*|image: ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}|" ${MANIFEST_PATH}
+          echo "Updated manifest:"
+          grep "image:" ${MANIFEST_PATH}
+
+      - name: Commit and push updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${MANIFEST_PATH}
+          if git diff --cached --quiet; then
+            echo "No changes to commit — manifest already points at this image"
+          else
+            git commit -m "Deploy ${IMAGE_NAME}:${IMAGE_TAG}"
+            git push origin HEAD:prod
+          fi
+
+      # ---------- Notifications ----------
+      - name: Send success email
+        if: success()
+        run: |
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
+            -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "sender": {"email": "${{ env.EMAIL_FROM }}"},
+              "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
+              "subject": "CD SUCCESS: ${{ github.workflow }} #${{ github.run_number }}",
+              "textContent": "Manifest '"${MANIFEST_PATH}"' updated to '"${IMAGE_NAME}"':'"${IMAGE_TAG}"'.\n\nArgoCD will sync '"${DEPLOYMENT_NAME}"' to AKS shortly.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
+
+      - name: Send failure email
+        if: failure()
+        run: |
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
+            -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "sender": {"email": "${{ env.EMAIL_FROM }}"},
+              "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
+              "subject": "CD FAILED: ${{ github.workflow }} #${{ github.run_number }}",
+              "textContent": "The CD workflow run #${{ github.run_number }} FAILED while updating the manifest for '"${DEPLOYMENT_NAME}"'. The new image was pushed to ACR but has NOT been deployed.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
