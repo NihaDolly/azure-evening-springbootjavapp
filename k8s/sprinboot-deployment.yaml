@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: springboot-app
-        image: demohellowrld.azurecr.io/sprinbootapp:bdb80ab57148cdd3768a86283d4a2245f8c8a9f6
+        image: demohellowrld.azurecr.io/sprinbootapp:7c957838dcdbf3df1613007451a992bd975c6855
         ports:
         - containerPort: 8080
       imagePullSecrets:
