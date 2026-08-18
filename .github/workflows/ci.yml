@@ -1,0 +1,95 @@
+name: CI - Build & Push Docker Image to ACR
+
+on:
+  push:
+    branches: [ "prod" ]
+    paths-ignore:
+      - 'k8s/**'         
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write  
+  contents: read   
+
+env:
+  IMAGE_NAME: sprinbootapp
+  ACR_NAME: demohellowrld
+  ACR_LOGIN_SERVER: demohellowrld.azurecr.io
+  EMAIL_RECIPIENTS: bkrraj2021@gmail.com
+  EMAIL_FROM: bkrraj@gmail.com
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------- Checkout ----------
+      - name: Check out from Git
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+
+      # ---------- Maven ----------
+      - name: Set up JDK & Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'   # change to match your app's Java version
+          cache: 'maven'
+
+      - name: Maven Package
+        run: mvn package
+
+
+      - name: Build Docker image
+        run: docker build -t ${IMAGE_NAME}:${{ github.sha }} .
+
+      # ---------- Azure login (OIDC, no client secret) ----------
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      # ---------- Docker push ----------
+      - name: Tag & Push image to ACR
+        run: |
+          docker tag ${IMAGE_NAME}:${{ github.sha }} ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${{ github.sha }}
+          docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${{ github.sha }}
+
+      # ---------- Notifications ----------
+      - name: Send success email
+        if: success()
+        run: |
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
+            -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "sender": {"email": "${{ env.EMAIL_FROM }}"},
+              "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
+              "subject": "CI SUCCESS: ${{ github.workflow }} #${{ github.run_number }}",
+              "textContent": "Image '"${IMAGE_NAME}"':${{ github.sha }} was built and pushed to ACR successfully.\n\nThe CD pipeline will pick this up and deploy it automatically.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
+
+      - name: Send failure email
+        if: failure()
+        run: |
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST https://api.brevo.com/v3/smtp/email \
+            -H "api-key: ${{ secrets.BREVO_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "sender": {"email": "${{ env.EMAIL_FROM }}"},
+              "to": [{"email": "${{ env.EMAIL_RECIPIENTS }}"}],
+              "subject": "CI FAILED: ${{ github.workflow }} #${{ github.run_number }}",
+              "textContent": "The CI workflow run #${{ github.run_number }} FAILED while building/pushing the image. The CD pipeline will NOT run.\n\nRun URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }')
+          echo "Brevo responded with HTTP $http_code"
+          cat response.json
+          if [ "$http_code" -ge 400 ]; then exit 1; fi
