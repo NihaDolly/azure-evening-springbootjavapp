@@ -31,7 +31,7 @@ pipeline {
             }
         }
 
-        // stage('Maven Validate') 
+        // stage('Maven Validate ') 
         // {
         //     steps {
         //         sh 'mvn validate'
